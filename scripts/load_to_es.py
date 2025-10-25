@@ -2,13 +2,13 @@ import csv
 import os
 from elasticsearch import Elasticsearch, helpers
 
-# Ahora usamos endpoint directo en lugar de cloud_id
-ES_ENDPOINT = os.environ["ELASTIC_ENDPOINT"]
+# Tomamos los valores desde los secrets de GitHub Actions
+ENDPOINT = os.environ["ELASTIC_ENDPOINT"]
 API_KEY = os.environ["ELASTIC_API_KEY"]
 
-# Conectar a Elasticsearch
+# Conectar a Elasticsearch usando el endpoint directo
 es = Elasticsearch(
-    ES_ENDPOINT,
+    ENDPOINT,
     api_key=API_KEY,
 )
 
@@ -21,19 +21,19 @@ if not es.indices.exists(index=INDEX_NAME):
         body={
             "mappings": {
                 "properties": {
-                    "Fecha": {"type": "date"},            # Ej: 2024-01-01
+                    "Fecha": {"type": "date"},            # Ej: 2024-10-25
                     "Material": {"type": "keyword"},      # Nombre / código del material
-                    "StockInicial": {"type": "integer"},  # Existencia al inicio
-                    "Entradas": {"type": "integer"},      # Entró al almacén
-                    "Consumo": {"type": "integer"},       # Salió / se usó
-                    "StockFinal": {"type": "integer"}     # Existencia final
+                    "StockInicial": {"type": "integer"},  # Stock al inicio
+                    "Entradas": {"type": "integer"},      # Lo que entró
+                    "Consumo": {"type": "integer"},       # Lo que salió
+                    "StockFinal": {"type": "integer"}     # Stock final del día
                 }
             }
         }
     )
 
 docs = []
-# Tu archivo tenía encoding latin1, lo respetamos
+# Usamos latin1 porque tu CSV venía así
 with open("data/inventario.csv", newline="", encoding="latin1") as f:
     reader = csv.DictReader(f)
 
@@ -46,7 +46,7 @@ with open("data/inventario.csv", newline="", encoding="latin1") as f:
                 "StockInicial": int(row["StockInicial"]),
                 "Entradas": int(row["Entradas"]),
                 "Consumo": int(row["Consumo"]),
-                "StockFinal": int(row["StockFinal"]),
+                "StockFinal": int(row["StockFinal"])
             }
         })
 
