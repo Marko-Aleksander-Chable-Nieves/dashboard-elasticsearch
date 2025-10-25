@@ -30,13 +30,13 @@ jobs:
 
       - name: Cargar CSV a Elasticsearch
         env:
-          ELASTIC_CLOUD_ID: ${{ secrets.ELASTIC_CLOUD_ID }}
+          ELASTIC_ENDPOINT: ${{ secrets.ELASTIC_ENDPOINT }}
           ELASTIC_API_KEY:  ${{ secrets.ELASTIC_API_KEY }}
         run: python scripts/load_to_es.py
 
       - name: Generar gráfica y sitio estático
         env:
-          ELASTIC_CLOUD_ID: ${{ secrets.ELASTIC_CLOUD_ID }}
+          ELASTIC_ENDPOINT: ${{ secrets.ELASTIC_ENDPOINT }}
           ELASTIC_API_KEY:  ${{ secrets.ELASTIC_API_KEY }}
         run: python scripts/plot_and_site.py
 
@@ -60,4 +60,3 @@ jobs:
       - name: Deploy a GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
