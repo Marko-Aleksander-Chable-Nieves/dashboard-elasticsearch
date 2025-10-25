@@ -2,13 +2,13 @@ import csv
 import os
 from elasticsearch import Elasticsearch, helpers
 
-# Credenciales que vienen de los secrets de GitHub Actions
-CLOUD_ID = os.environ["ELASTIC_CLOUD_ID"]
+# Ahora usamos endpoint directo en lugar de cloud_id
+ES_ENDPOINT = os.environ["ELASTIC_ENDPOINT"]
 API_KEY = os.environ["ELASTIC_API_KEY"]
 
-# Conectar a Elasticsearch Cloud
+# Conectar a Elasticsearch
 es = Elasticsearch(
-    cloud_id=CLOUD_ID,
+    ES_ENDPOINT,
     api_key=API_KEY,
 )
 
@@ -21,19 +21,19 @@ if not es.indices.exists(index=INDEX_NAME):
         body={
             "mappings": {
                 "properties": {
-                    "Fecha": {"type": "date"},            # formato tipo 2023-01-01
-                    "Material": {"type": "keyword"},      # nombre del material
-                    "StockInicial": {"type": "integer"},   # cantidad al inicio del día
-                    "Entradas": {"type": "integer"},       # lo que entró
-                    "Consumo": {"type": "integer"},        # lo que se usó / salió
-                    "StockFinal": {"type": "integer"}      # existencias al final del día
+                    "Fecha": {"type": "date"},            # Ej: 2024-01-01
+                    "Material": {"type": "keyword"},      # Nombre / código del material
+                    "StockInicial": {"type": "integer"},  # Existencia al inicio
+                    "Entradas": {"type": "integer"},      # Entró al almacén
+                    "Consumo": {"type": "integer"},       # Salió / se usó
+                    "StockFinal": {"type": "integer"}     # Existencia final
                 }
             }
         }
     )
 
 docs = []
-# OJO: tu CSV estaba en latin-1 cuando lo leímos, así que uso encoding="latin1"
+# Tu archivo tenía encoding latin1, lo respetamos
 with open("data/inventario.csv", newline="", encoding="latin1") as f:
     reader = csv.DictReader(f)
 
@@ -46,15 +46,12 @@ with open("data/inventario.csv", newline="", encoding="latin1") as f:
                 "StockInicial": int(row["StockInicial"]),
                 "Entradas": int(row["Entradas"]),
                 "Consumo": int(row["Consumo"]),
-                "StockFinal": int(row["StockFinal"])
+                "StockFinal": int(row["StockFinal"]),
             }
         })
 
-# Enviamos los documentos a Elasticsearch en bulk
 if docs:
     helpers.bulk(es, docs)
     print(f"Se cargaron {len(docs)} filas al índice '{INDEX_NAME}'")
 else:
     print("El CSV estaba vacío o no se leyó nada.")
-
-
